@@ -23,5 +23,6 @@ public class SampleGateway {
         platform = new SamplePlatform();
         sensationClient = new SensationClient(platform);
         sensationClient.start();
+        //platform.start();
     }
 }

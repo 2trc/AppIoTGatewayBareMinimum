@@ -6,24 +6,14 @@ import java.util.logging.Logger;
 
 import com.appiot.examples.simulated.platform.SimulatedPlatformListener;
 import com.appiot.examples.simulated.platform.SimulatedPlatformManager;
-import com.appiot.examples.simulated.platform.device.HumiditySensor;
 import com.appiot.examples.simulated.platform.device.SensorData;
 import com.appiot.examples.simulated.platform.device.SimulatedDevice;
 import se.sigma.sensation.gateway.sdk.client.Platform;
 import se.sigma.sensation.gateway.sdk.client.PlatformInitialisationException;
 import se.sigma.sensation.gateway.sdk.client.SensationClient;
 import se.sigma.sensation.gateway.sdk.client.core.SensationClientProperties;
-import se.sigma.sensation.gateway.sdk.client.data.DataCollectorDeleteResponseCode;
-import se.sigma.sensation.gateway.sdk.client.data.DataCollectorStatus;
-import se.sigma.sensation.gateway.sdk.client.data.ISensorMeasurement;
-import se.sigma.sensation.gateway.sdk.client.data.NetworkSetting;
-import se.sigma.sensation.gateway.sdk.client.data.NetworkSettingResponseCode;
-import se.sigma.sensation.gateway.sdk.client.data.RebootResponseCode;
-import se.sigma.sensation.gateway.sdk.client.data.RestartApplicationResponseCode;
-import se.sigma.sensation.gateway.sdk.client.data.SensorCollectionRegistrationResponseCode;
-import se.sigma.sensation.gateway.sdk.client.data.UpdatePackage;
-import se.sigma.sensation.gateway.sdk.client.data.UpdatePackageResponseCode;
-import se.sigma.sensation.gateway.sdk.client.data.DataCollectorStatusCode;
+import se.sigma.sensation.gateway.sdk.client.data.*;
+
 import se.sigma.sensation.gateway.sdk.client.registry.SensorCollectionRegistration;
 import se.sigma.sensation.gateway.sdk.client.registry.SensorCollectionRegistry;
 
@@ -35,6 +25,8 @@ public class SamplePlatform implements Platform {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     private SimulatedPlatformManager manager;
+
+    private SensationClient client;
 
     /**
      * Called when measurements are sent to Sensation telling if sensing the
@@ -97,9 +89,10 @@ public class SamplePlatform implements Platform {
      *             - Indicates platform initialization failure.
      */
 
-    public void init(final SensationClient sensationClient) throws PlatformInitialisationException {
+    public void init(final SensationClient client) throws PlatformInitialisationException {
         logger.log(Level.INFO, "called");
         manager = new SimulatedPlatformManager();
+        this.client = client;
 
         logger.log(Level.INFO, "Setting up devices.");
         manager.addDevice("Device 1", "111111");
@@ -110,7 +103,7 @@ public class SamplePlatform implements Platform {
         for(SimulatedDevice device : manager.getDevices()) {
             //System.out.println("Device serial number: " + device.getSerialNumber());
 
-            if(sensationClient.isSerialNumberRegistered(device.getSerialNumber())) {
+            if(client.isSerialNumberRegistered(device.getSerialNumber())) {
                 device.start();
             }
         }
@@ -122,6 +115,18 @@ public class SamplePlatform implements Platform {
                             sensorData.getSerialNumber(),
                             sensorData.getSensorType(),
                             sensorData.getValue()));
+
+                    SensorMeasurement measurement = new SensorMeasurement();
+                    measurement.setSerialNumber(sensorData.getSerialNumber());
+                    // Get the hardware type id from our contract.
+                    int hardwareTypeId = AppIoTContract.getSensorHardwareTypeId(sensorData.getSensorType());
+                    measurement.setSensorHardwareTypeId(hardwareTypeId);
+                    //Make sure this timestamp is a unix timestamp UTC
+                    measurement.setUnixTimestampUTC(sensorData.getTimestamp());
+                    // Insert sensor data value to a double array
+                    measurement.setValue(new double[]{sensorData.getValue()});
+                    // Send telemetry to Application Platform for IoT
+                    client.sendSensorMeasurement(measurement);
                 }
             }
         });
@@ -129,7 +134,7 @@ public class SamplePlatform implements Platform {
         logger.log(Level.INFO, "Starting up SimulatedPlatformManager...");
         manager.start();
         logger.log(Level.INFO, "Done.");
-
+/*
         //
         // Set interval in milliseconds between sending measurements to listener.
         manager.setSendInterval(2500);
@@ -154,7 +159,19 @@ public class SamplePlatform implements Platform {
 
         // Get interval in milliseconds between generating measurements
         humiditySensor.getReportInterval();
+*/
     }
+    /*
+    public void start() {
+        // Check if any of the devices is already registered
+        // If so, start the device.
+        List<SimulatedDevice> devices = manager.getDevices();
+        for(SimulatedDevice device : devices) {
+            if(client.isSerialNumberRegistered(device.getSerialNumber())) {
+                device.start();
+            }
+        }
+    }*/
 
     /**
      * Called from Sensation requesting the system to reboot.
