@@ -22,7 +22,13 @@
             <artifactId>gateway-sdk</artifactId>
             <version>0.8.11</version>
         </dependency>
-    </dependencies>
 
+        <dependency>
+            <groupId>com.appiot.examples</groupId>
+            <artifactId>simulatedplatform</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+    </dependencies>
 
 </project>

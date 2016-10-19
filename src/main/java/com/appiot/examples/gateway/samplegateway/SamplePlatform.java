@@ -4,6 +4,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.appiot.examples.simulated.platform.SimulatedPlatformListener;
+import com.appiot.examples.simulated.platform.SimulatedPlatformManager;
+import com.appiot.examples.simulated.platform.device.HumiditySensor;
+import com.appiot.examples.simulated.platform.device.SensorData;
+import com.appiot.examples.simulated.platform.device.SimulatedDevice;
 import se.sigma.sensation.gateway.sdk.client.Platform;
 import se.sigma.sensation.gateway.sdk.client.PlatformInitialisationException;
 import se.sigma.sensation.gateway.sdk.client.SensationClient;
@@ -28,6 +33,8 @@ import se.sigma.sensation.gateway.sdk.client.registry.SensorCollectionRegistry;
 public class SamplePlatform implements Platform {
 
     private final Logger logger = Logger.getLogger(this.getClass().getName());
+
+    private SimulatedPlatformManager manager;
 
     /**
      * Called when measurements are sent to Sensation telling if sensing the
@@ -89,8 +96,64 @@ public class SamplePlatform implements Platform {
      * @throws PlatformInitialisationException
      *             - Indicates platform initialization failure.
      */
-    public void init(SensationClient arg0) throws PlatformInitialisationException {
+
+    public void init(final SensationClient sensationClient) throws PlatformInitialisationException {
         logger.log(Level.INFO, "called");
+        manager = new SimulatedPlatformManager();
+
+        logger.log(Level.INFO, "Setting up devices.");
+        manager.addDevice("Device 1", "111111");
+        manager.addDevice("Device 2", "111122");
+        manager.addDevice("Device 3", "111133");
+
+        // If registered, start up the device
+        for(SimulatedDevice device : manager.getDevices()) {
+            //System.out.println("Device serial number: " + device.getSerialNumber());
+
+            if(sensationClient.isSerialNumberRegistered(device.getSerialNumber())) {
+                device.start();
+            }
+        }
+
+        manager.addListener(new SimulatedPlatformListener() {
+            public void onData(List<SensorData> measurements) {
+                for(SensorData sensorData : measurements) {
+                    logger.log(Level.INFO, String.format("New Measurement from device %s %s %s",
+                            sensorData.getSerialNumber(),
+                            sensorData.getSensorType(),
+                            sensorData.getValue()));
+                }
+            }
+        });
+
+        logger.log(Level.INFO, "Starting up SimulatedPlatformManager...");
+        manager.start();
+        logger.log(Level.INFO, "Done.");
+
+        //
+        // Set interval in milliseconds between sending measurements to listener.
+        manager.setSendInterval(2500);
+
+        // List registered devices
+        List<SimulatedDevice> devices = manager.getDevices();
+
+        // Get registered device with serial number 1.
+        SimulatedDevice device = manager.getDeviceBySerialNumber("111111");
+
+        // Starts the device and measurements from sensors are generated.
+        device.start();
+
+        // Stops the device.
+        device.stop();
+
+        // Get the humidity sensor of device 1
+        HumiditySensor humiditySensor = device.getHumiditySensor();
+
+        // Set interval in milliseconds between generating measurements
+        humiditySensor.setReportInterval(500);
+
+        // Get interval in milliseconds between generating measurements
+        humiditySensor.getReportInterval();
     }
 
     /**
