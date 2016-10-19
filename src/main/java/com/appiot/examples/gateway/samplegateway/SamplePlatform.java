@@ -18,6 +18,7 @@ import se.sigma.sensation.gateway.sdk.client.data.RestartApplicationResponseCode
 import se.sigma.sensation.gateway.sdk.client.data.SensorCollectionRegistrationResponseCode;
 import se.sigma.sensation.gateway.sdk.client.data.UpdatePackage;
 import se.sigma.sensation.gateway.sdk.client.data.UpdatePackageResponseCode;
+import se.sigma.sensation.gateway.sdk.client.data.DataCollectorStatusCode;
 import se.sigma.sensation.gateway.sdk.client.registry.SensorCollectionRegistration;
 import se.sigma.sensation.gateway.sdk.client.registry.SensorCollectionRegistry;
 
