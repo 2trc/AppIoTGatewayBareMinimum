@@ -133,11 +133,12 @@ public class SamplePlatform implements Platform {
         logger.log(Level.INFO, "Starting up SimulatedPlatformManager...");
         manager.start();
         logger.log(Level.INFO, "Done.");
-/*
+
         //
         // Set interval in milliseconds between sending measurements to listener.
         manager.setSendInterval(2500);
 
+/*
         // List registered devices
         List<SimulatedDevice> devices = manager.getDevices();
 
