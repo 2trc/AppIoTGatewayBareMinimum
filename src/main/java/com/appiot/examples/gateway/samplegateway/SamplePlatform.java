@@ -101,7 +101,6 @@ public class SamplePlatform implements Platform {
 
         // If registered, start up the device
         for(SimulatedDevice device : manager.getDevices()) {
-            //System.out.println("Device serial number: " + device.getSerialNumber());
 
             if(client.isSerialNumberRegistered(device.getSerialNumber())) {
                 device.start();
